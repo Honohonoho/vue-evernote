@@ -1,8 +1,9 @@
 {
   "name": "vue-evernote",
   "version": "1.0.0",
-  "description": "A Vue.js project",
+  "description": "evernote with Vue",
   "author": "Honohonoho <751718620@qq.com>",
+  "homepage": "https://honohonoho.github.io/vue-evernote/build",
   "private": true,
   "scripts": {
     "dev": "webpack-dev-server --inline --progress --config build/webpack.dev.conf.js",
