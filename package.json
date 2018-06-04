@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "evernote with Vue",
   "author": "Honohonoho <751718620@qq.com>",
-  "homepage": "https://honohonoho.github.io/vue-evernote/build",
+  "homepage": "https://honohonoho.github.io/vue-evernote/dist",
   "private": true,
   "scripts": {
     "dev": "webpack-dev-server --inline --progress --config build/webpack.dev.conf.js",
