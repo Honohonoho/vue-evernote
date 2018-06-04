@@ -1,6 +1,16 @@
 <template>
     <div id="app">
-        <img src="./assets/logo.png">
+        <ul>
+            <li>
+                <router-link to="/login">登录页</router-link>
+            </li>
+            <li>
+                <router-link to="/notebookslist">笔记本列表页</router-link>
+            </li>
+            <li>
+                <router-link to="/trash/2">回收站</router-link>
+            </li>
+        </ul>
         <router-view/>
     </div>
 </template>
@@ -14,10 +24,5 @@ export default {
 <style>
 #app {
     font-family: 'Avenir', Helvetica, Arial, sans-serif;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-    text-align: center;
-    color: #2c3e50;
-    margin-top: 60px;
 }
 </style>
