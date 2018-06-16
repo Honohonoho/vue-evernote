@@ -1,28 +1,63 @@
 <template>
     <div id="app">
-        <ul>
-            <li>
-                <router-link to="/login">登录页</router-link>
-            </li>
-            <li>
-                <router-link to="/notebookslist">笔记本列表页</router-link>
-            </li>
-            <li>
-                <router-link to="/trash/2">回收站</router-link>
-            </li>
-        </ul>
+        <NavBar></NavBar>
         <router-view/>
     </div>
 </template>
 
 <script>
+import NavBar from '@/view/components/NavBar.vue'
+
 export default {
-    name: 'App'
+    name: 'App',
+    components: {
+        NavBar
+    }
 }
 </script>
 
 <style>
-#app {
+@import '//at.alicdn.com/t/font_496303_kqrjhri8l25d0a4i.css';
+#app { 
     font-family: 'Avenir', Helvetica, Arial, sans-serif;
+    display: flex;
+    align-items: stretch;
+}
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+html, body, #app {
+    height: 100%;
+}
+
+body {
+    font-family: 'Avenir', Helvetica, Arial, sans-serif;
+    font-size: 14px;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;  
+    background-color: #eee;
+}
+
+a {
+    text-decoration: none;
+    color: #444;
+}
+
+ul, li{
+    list-style: none;
+}
+
+.btn {
+    color: #666;
+    font-size: 12px;
+    padding: 2px 4px;
+    background-color: #fff;
+    box-shadow: 0px 0px 2px 0px #ccc;
+    border: none;
+    cursor: pointer;
+    display: inline-block;
 }
 </style>
