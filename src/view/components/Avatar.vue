@@ -1,5 +1,9 @@
 <template>
-    <span :title="user.username">{{slug}}</span>
+    <div>
+        <router-link to="/login">
+            <span :title="user.username">{{slug}}</span>
+        </router-link>
+    </div>
 </template>
 
 <script>
