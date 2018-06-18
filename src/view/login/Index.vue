@@ -30,6 +30,12 @@
  </template>
 
 <script>
+import User from '@/servers/user'
+
+User.get_userinfo().then(res => {
+    console.log(res)
+})
+
 export default {
     name: 'Login',
     data(){
@@ -73,6 +79,9 @@ export default {
             this.register.isError = false
             this.register.notice = ''
             console.log(`start register..., username: ${this.register.username} , password: ${this.register.password}`)
+            User.register({username: this.register.username, password: this.register.password}).then(res => {
+                console.log(res)
+            })
         },
         onLogin(){
             if(!/^[\w\u4e00-\u9fa5]{3,15}$/.test(this.login.username)){
@@ -87,8 +96,13 @@ export default {
             }
             this.login.isError = false
             this.login.notice = ''
-            
-            console.log(`start login..., username: ${this.login.username} , password: ${this.login.password}`)      
+            console.log(`start login..., username: ${this.login.username} , password: ${this.login.password}`) 
+            User.login({username: this.login.username, password: this.login.password}).then(res => {
+                console.log(res)
+                User.get_userinfo().then(res => {
+                    console.log(res)
+                })
+            })
         }
     }
 }
