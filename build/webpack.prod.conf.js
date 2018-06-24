@@ -13,6 +13,9 @@ const UglifyJsPlugin = require('uglifyjs-webpack-plugin')
 
 const env = require('../config/prod.env')
 
+// 根据环境添加不同的baseUrl路径
+require('.pre_config').config({isDev: false})
+
 const webpackConfig = merge(baseWebpackConfig, {
   module: {
     rules: utils.styleLoaders({
