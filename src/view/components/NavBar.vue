@@ -20,6 +20,7 @@
 
 <script>
 import Avatar from '@/view/components/Avatar.vue'
+import User from '@/servers/user' 
 export default {
     components: {
         Avatar
@@ -30,6 +31,9 @@ export default {
     },
     methods: {
         onLogout() {
+            User.logout().then(res => {
+                console.log(res)
+            })
         }
     }
 };
