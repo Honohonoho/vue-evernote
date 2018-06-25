@@ -1,20 +1,36 @@
 <template>
     <div>
         <router-link to="/login">
-            <span :title="user.username">{{slug}}</span>
+            <span :title="username">{{slug}}</span>
         </router-link>
     </div>
 </template>
 
 <script>
+import User from '@/servers/user'
+import Bus from '@/utils/bus'
+
 export default {
     data() {
         return {
-            user: {
-                username: "hunger"
-            },
-            slug: "H"
+            username: "未登录"
         };
+    },
+    created() {
+        Bus.$on('catchUserInfo', data => {
+            this.username = data.username
+        })
+        User.getUserInfo().then(res => {
+            console.log(res)
+            if (res.isLogin) {
+                this.username = res.data.username
+            }
+        })
+    },
+    computed: {
+        slug() {
+            return this.username.charAt(0)
+        }
     }
 };
 </script>

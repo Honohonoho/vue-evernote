@@ -13,11 +13,20 @@
 </template>
 
 <script>
+import User from '@/servers/user'
+
 export default {
     data() {
         return {
             msg: "笔记本列表"
         };
+    },
+    created() {
+        User.getUserInfo().then(res => {
+            if (!res.isLogin) {
+                this.$router.push({path: '/login'})
+            }
+        })
     }
 };
 </script>
