@@ -31,10 +31,7 @@
 
 <script>
 import User from '@/servers/user'
-
-User.get_userinfo().then(res => {
-    console.log(res)
-})
+import Bus from '@/utils/bus'
 
 export default {
     name: 'Login',
@@ -79,9 +76,19 @@ export default {
             this.register.isError = false
             this.register.notice = ''
             console.log(`start register..., username: ${this.register.username} , password: ${this.register.password}`)
-            User.register({username: this.register.username, password: this.register.password}).then(res => {
-                console.log(res)
-            })
+            User.register({username: this.register.username, password: this.register.password})
+                .then(res => {
+                    console.log(res)
+                    this.register.isError = false
+                    this.register.notice = ''
+                    Bus.$emit('catchUserInfo', res.data)
+                    this.$router.push({path: '/notebookslist'})
+                })
+                .catch(res => {
+                    console.log(res)
+                    this.register.isError = true
+                    this.register.notice = res.msg
+                })
         },
         onLogin(){
             if(!/^[\w\u4e00-\u9fa5]{3,15}$/.test(this.login.username)){
@@ -94,15 +101,20 @@ export default {
                 this.login.notice = '密码长度为6~16个字符'
                 return
             }
-            this.login.isError = false
-            this.login.notice = ''
             console.log(`start login..., username: ${this.login.username} , password: ${this.login.password}`) 
-            User.login({username: this.login.username, password: this.login.password}).then(res => {
-                console.log(res)
-                User.get_userinfo().then(res => {
+            User.login({username: this.login.username, password: this.login.password})
+                .then(res => {
                     console.log(res)
+                    this.login.isError = false
+                    this.login.notice = ''
+                    Bus.$emit('catchUserInfo', res.data)
+                    this.$router.push({path: '/notebookslist'})
                 })
-            })
+                .catch(res => {
+                    console.log(res)
+                    this.login.isError = true
+                    this.login.notice = res.msg
+                })
         }
     }
 }

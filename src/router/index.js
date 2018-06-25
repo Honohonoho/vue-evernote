@@ -8,7 +8,7 @@ import TrashDetail from '@/view/trash'
 Vue.use(Router)
 
 export default new Router({
-    mode: 'history',
+    // mode: 'history',
     routes: [
         {
             path: '/login',

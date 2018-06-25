@@ -20,7 +20,7 @@ export default {
     logout() {
         return api(USER_API.LOGOUT)
     },
-    get_userinfo() {
+    getUserInfo() {
         return api(USER_API.GET_USERINFO)
     }
 }
