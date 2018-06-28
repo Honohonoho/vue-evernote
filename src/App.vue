@@ -19,7 +19,7 @@ export default {
 <style>
 @import '//at.alicdn.com/t/font_496303_kqrjhri8l25d0a4i.css';
 #app { 
-    font-family: 'Avenir', Helvetica, Arial, sans-serif;
+    font-family: 'PingFangSC-Regular', 'Microsoft YaHei', 'Avenir', Helvetica, Arial, sans-serif;
     display: flex;
     align-items: stretch;
 }

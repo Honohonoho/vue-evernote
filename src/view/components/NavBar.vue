@@ -1,20 +1,29 @@
 <template>
     <div id="sidebar">
-        <Avatar></Avatar>
-        <div class="icons">
-            <router-link to="/note/1" title="笔记">
+        <!-- <Avatar></Avatar> -->
+        <el-menu
+            background-color="#545c64"
+            text-color="#fff"
+            active-text-color="#ffd04b"
+        >   
+            <Avatar></Avatar>
+            <el-menu-item index="1">
                 <i class="iconfont icon-note"></i>
-            </router-link>
-            <router-link to="/notebookslist">
+                <span>笔记本详情</span>
+            </el-menu-item>
+            <el-menu-item index="2">
                 <i class="iconfont icon-notebook"></i>
-            </router-link>
-            <router-link to="/trash/2" title="回收站">
+                <span slot="title">笔记本列表</span>
+            </el-menu-item>
+            <el-menu-item index="3">
                 <i class="iconfont icon-trash"></i>
-            </router-link>
-        </div>
-        <div class="logout" @click="onLogout">
-            <i class="iconfont icon-logout"></i>
-        </div>
+                <span slot="title">废纸篓</span>
+            </el-menu-item>
+            <div class="logout" @click="onLogout">
+                <i class="iconfont icon-logout"></i>
+                <span>注销</span>
+            </div>
+        </el-menu>
     </div>
 </template>
 
@@ -41,10 +50,13 @@ export default {
 
 <style lang="scss" scoped>
 #sidebar {
-    position: relative;
-    width: 56px;
-    text-align: center;
-    background-color: #2c333c;
+    height: 100%;
+    .el-menu {
+        height: 100%;
+        .el-menu-item .iconfont {
+            color: inherit;
+        }
+    }
     .icons {
         margin-top: 15px;
         a {
@@ -61,9 +73,12 @@ export default {
         width: 100%;
         text-align: center;
         cursor: pointer;
-    }
-    .iconfont {
-        color: #fff;
+        .iconfont {
+            color: #F56C6C;
+        }
+        span {
+            color: #F56C6C;
+        }
     }
 }
 </style>
