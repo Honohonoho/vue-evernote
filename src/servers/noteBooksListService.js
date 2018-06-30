@@ -7,14 +7,13 @@ const NOTEBOOK_BASE_API = '/notebooks'
 export default {
     get() {
         return new Promise((resolve, reject) => {
-            let url = `${NOTEBOOK_BASE_API}/notebooks`
+            let url = `${NOTEBOOK_BASE_API}`
             api(url, 'GET').then(res => {
                 res.data = res.data.sort((notebook1, notebook2) => {
-                    notebook1.createAt < notebook2.createAt
+                    return notebook1.createdAt < notebook2.createdAt
                 })
                 res.data.forEach(notebook => {
-                    console.log(notebook)
-                    notebook.create_date_name = formatDate(notebook.createAt)
+                    notebook.create_date_name = formatDate(notebook.createdAt)
                 })
                 resolve(res)
             }).catch(res => {
@@ -23,15 +22,15 @@ export default {
         })
     },
     create({title = ''} = {title: ''}) {
-        let url = `${NOTEBOOK_BASE_API}/notebooks`
+        let url = `${NOTEBOOK_BASE_API}`
         return api(url, 'POST', {title})
     },
     update({id, title}) {
-        let url = `${NOTEBOOK_BASE_API}/notebooks/${id}`
+        let url = `${NOTEBOOK_BASE_API}/${id}`
         return api(url, 'PATCH', {title})
     },
-    delete(id) {
-        let url = `${NOTEBOOK_BASE_API}/notebooks/${id}`
+    delete({id}) {
+        let url = `${NOTEBOOK_BASE_API}/${id}`
         return api(url, 'DELETE')
     }
 }

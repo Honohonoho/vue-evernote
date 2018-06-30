@@ -5,19 +5,26 @@
             background-color="#545c64"
             text-color="#fff"
             active-text-color="#ffd04b"
+            :default-active="'2'"
         >   
             <Avatar></Avatar>
             <el-menu-item index="1">
-                <i class="iconfont icon-note"></i>
-                <span>笔记本详情</span>
+                <router-link class="link" to="/note/2">
+                    <i class="iconfont icon-note"></i>
+                    <span>笔记本详情</span>
+                </router-link>
             </el-menu-item>
             <el-menu-item index="2">
-                <i class="iconfont icon-notebook"></i>
-                <span slot="title">笔记本列表</span>
+                <router-link class="link" to="/notebookslist">
+                    <i class="iconfont icon-notebook"></i>
+                    <span>笔记本列表</span>
+                </router-link>
             </el-menu-item>
             <el-menu-item index="3">
-                <i class="iconfont icon-trash"></i>
-                <span slot="title">废纸篓</span>
+                <router-link class="link" to="/trash/2">
+                    <i class="iconfont icon-trash"></i>
+                    <span>废纸篓</span>
+                </router-link>
             </el-menu-item>
             <div class="logout" @click="onLogout">
                 <i class="iconfont icon-logout"></i>
@@ -53,6 +60,9 @@ export default {
     height: 100%;
     .el-menu {
         height: 100%;
+        .link {
+            color: inherit;
+        }
         .el-menu-item .iconfont {
             color: inherit;
         }

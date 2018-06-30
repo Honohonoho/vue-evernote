@@ -12,18 +12,22 @@ export default new Router({
     routes: [
         {
             path: '/login',
+            name: 'login',
             component: Login
         },
         {
             path: '/notebookslist',
+            name: 'notebookslist',
             component: NoteBooksList
         },
         {
             path: '/note/:note_id',
+            name: 'note',
             component: NoteBookDetail
         },
         {
             path: '/trash/:note_id',
+            name: 'trash',
             component: TrashDetail
         }
     ]
