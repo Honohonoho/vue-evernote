@@ -18,14 +18,17 @@ export default {
         };
     },
     created() {
-        Bus.$on('catchUserInfo', data => {
-            this.username = data.username
-        })
         User.getUserInfo().then(res => {
             console.log(res)
             if (res.isLogin) {
                 this.username = res.data.username
             }
+            else {
+                this.$router.push({path: '/login'})
+            }
+        })
+        Bus.$on('catchUserInfo', data => {
+            this.username = data.username
         })
     },
     computed: {

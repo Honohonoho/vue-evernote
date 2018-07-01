@@ -1,6 +1,5 @@
 <template>
     <div id="sidebar">
-        <!-- <Avatar></Avatar> -->
         <el-menu
             background-color="#545c64"
             text-color="#fff"
@@ -9,19 +8,19 @@
         >   
             <Avatar></Avatar>
             <el-menu-item index="1">
-                <router-link class="link" to="/note/2">
+                <router-link class="link" :to="{name: 'note', params: {notebook_id: ''}}">
                     <i class="iconfont icon-note"></i>
                     <span>笔记本详情</span>
                 </router-link>
             </el-menu-item>
             <el-menu-item index="2">
-                <router-link class="link" to="/notebookslist">
+                <router-link class="link" :to="{path: '/notebookslist'}">
                     <i class="iconfont icon-notebook"></i>
                     <span>笔记本列表</span>
                 </router-link>
             </el-menu-item>
             <el-menu-item index="3">
-                <router-link class="link" to="/trash/2">
+                <router-link class="link" :to="{path: '/trash'}">
                     <i class="iconfont icon-trash"></i>
                     <span>废纸篓</span>
                 </router-link>
@@ -45,6 +44,14 @@ export default {
         return {
         }
     },
+    create() {
+        User.getUserInfo().then(res => {
+            if (res.isLogin) {
+                // this.$router.push({path: '/login'})
+                this.$router.push({path: '/notebookslist'})
+            }
+        })
+    },
     methods: {
         onLogout() {
             User.logout().then(res => {
@@ -60,7 +67,10 @@ export default {
     height: 100%;
     .el-menu {
         height: 100%;
+        border-right: none;
         .link {
+            display: inline-block;
+            width: 100%;
             color: inherit;
         }
         .el-menu-item .iconfont {

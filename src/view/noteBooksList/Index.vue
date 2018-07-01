@@ -9,7 +9,7 @@
                 <el-table :data="tableData" border style="width: 100%" row-class-name="table-row">
                     <el-table-column prop="title" label="标题">
                         <template slot-scope="scope">
-                            <router-link class="table-link" :to="{ name: 'note', params: { note_id: scope.row.id } }">
+                            <router-link class="table-link" :to="{ name: 'note', params: {notebook_id: scope.row.id} }">
                                 <span>
                                     <i class="fa fa-book"></i>
                                     {{scope.row.title}}
@@ -60,7 +60,6 @@ export default {
             NoteBooksListService.get().then(res => {
                 this.tableData = res.data
                 this.total = res.data.length
-                console.log(this.tableData)
             })
         },
         // 创建
