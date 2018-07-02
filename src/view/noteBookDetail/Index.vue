@@ -19,7 +19,7 @@
                         <el-table-column prop="create_date_name" label="更新时间" width="100"></el-table-column>
                         <el-table-column prop="title" label="标题">
                             <template slot-scope="scope">
-                                <router-link class="table-link" :to="{ name: 'note', query: { note_id: scope.row.id } }">
+                                <router-link class="table-link" :to="{ path: `/note/${noteBookId}`, query: { note_id: scope.row.id } }">
                                     <span>
                                         {{scope.row.title}}
                                     </span>
@@ -34,9 +34,11 @@
             <!-- <NoteContent v-bind:noteData="curNote" v-on:noteTitleChange="handleNoteTitleChange"></NoteContent> -->
             <div class="header">
                 <div class="info">
-                    <span class="create-time">创建日期：</span>
-                    <span class="update-time">更新日期：</span>
-                    <span class="status">状态：</span>
+                    <span class="create-time">创建日期：{{curNote.create_date_name}}</span>
+                    <span class="update-time">更新日期：{{curNote.update_date_name}}</span>
+                    <span class="status" v-if="isEditing && !isNoteUpdating">状态：<el-tag >正在输入</el-tag></span>
+                    <span class="status" v-if="isNoteUpdating">状态：<el-tag type="info">保存中</el-tag></span>
+                    <span class="status" v-if="!isEditing && !isNoteUpdating">状态：<el-tag type="success">以保存</el-tag></span>
                 </div>
                 <div class="buttons">
                     <span>预览</span>
@@ -45,10 +47,10 @@
             </div>
             <div class="main">
                 <div class="note-title">
-                    <input type="text" placeholder="请输入标题" >
+                    <input type="text" placeholder="请输入标题" v-model="curNote.title" @focus="onEditStatusChange" @input="onNoteTitleChange">
                 </div>
                 <div class="note-content">
-                    <textarea  placeholder="写点什么吧~ 支持Markdown语法"></textarea>
+                    <textarea  placeholder="写点什么吧~ 支持Markdown语法" v-model="curNote.content" @input="onNoteContentChange" @focus="onEditStatusChange"></textarea>
                 </div>
             </div>
         </div>
@@ -72,6 +74,9 @@ export default {
             NoteBooksListData: [],
             curNoteBook: {},
             curNote: {},
+            isEditing: false,
+            isNoteUpdating: false,
+            timeId: '',
             tableData: [
                 {time: '刚刚', title: '123'},
                 {time: '刚刚', title: '笔记'},
@@ -82,15 +87,15 @@ export default {
             ]
         };
     },
+    watch: {
+        '$route': function(val) {
+            // console.log(val)
+        }
+    },
     beforeRouteUpdate (to, from, next) {
-        console.log('to', to)
         this.noteBookId = to.params.notebook_id
         this.loadNoteBooksList()
         next()
-        // 在当前路由改变，但是该组件被复用时调用
-        // 举例来说，对于一个带有动态参数的路径 /foo/:id，在 /foo/1 和 /foo/2 之间跳转的时候，
-        // 由于会渲染同样的 Foo 组件，因此组件实例会被复用。而这个钩子就会在这个情况下被调用。
-        // 可以访问组件实例 `this`
     },
     created() {
         User.getUserInfo().then(res => {
@@ -145,10 +150,51 @@ export default {
             console.log(row)
             this.curNote = row
         },
+        // 笔记内容修改
+        onNoteContentChange(val) {
+            let _this = this
+            this.curNote.content = val.target.value
+            this.isEditing = true
+            //节流
+            clearTimeout(this.timeId)
+            this.timeId = setTimeout(function () {
+                _this.isNoteUpdating = true
+                NoteBookDetailService.update({noteId: _this.curNote.id}, {title: _this.curNote.title, content: _this.curNote.content}).then(res => {
+                    console.log(res)
+                    _this.isNoteUpdating = false
+                    _this.isEditing = false
+                }).catch(res => {
+                    this.$message({
+                        message: res.msg,
+                        type: 'error'
+                    })
+                })
+            }, 1000)
+        },
         // 笔记标题修改
-        handleNoteTitleChange(val) {
-            console.log(val)
-            this.curNote.title = val
+        onNoteTitleChange(val) {
+            let _this = this
+            this.curNote.title = val.target.value
+            this.isEditing = true
+            //节流
+            clearTimeout(this.timeId)
+            this.timeId = setTimeout(function () {
+                _this.isNoteUpdating = true
+                NoteBookDetailService.update({noteId: _this.curNote.id}, {title: _this.curNote.title, content: _this.curNote.content}).then(res => {
+                    console.log(res)
+                    _this.isNoteUpdating = false
+                    _this.isEditing = false
+                }).catch(res => {
+                    this.$message({
+                        message: res.msg,
+                        type: 'error'
+                    })
+                })
+            }, 1000)
+        },
+        // 笔记状态修改
+        onEditStatusChange() {
+            this.isEditing = true
         }
     }
 };
@@ -162,7 +208,7 @@ export default {
     justify-content: flex-start;
     align-items: flex-start;
     .left-container {
-        width: 350px;
+        width: 450px;
         height: 100%;
         background: #e9eef3;
         .header {
@@ -223,6 +269,7 @@ export default {
     }
     .right-container {
         flex-grow: 1;
+        min-width: 480px;
         height: 100%;
         width: 100%;
         display: flex;
@@ -231,9 +278,26 @@ export default {
         align-items: flex-start;
         .header {
             width: 100%;
-            height: 30px;
+            height: 60px;
             padding: 0 20px;
             color: #606266;
+            .info {
+                .create-time {
+                    display: inline-block;
+                    width: 150px;
+                }
+                .update-time {
+                    display: inline-block;
+                    width: 150px;
+                    margin-left: 10px;
+                }
+                .status {
+                    margin-left: 10px;
+                }
+            }
+            .buttons {
+                margin-left: auto;
+            }
         }
         .main {
             width: 100%;
