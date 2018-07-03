@@ -38,11 +38,12 @@
                     <span class="update-time">更新日期：{{curNote.update_date_name}}</span>
                     <span class="status" v-if="isEditing && !isNoteUpdating">状态：<el-tag >正在输入</el-tag></span>
                     <span class="status" v-if="isNoteUpdating">状态：<el-tag type="info">保存中</el-tag></span>
-                    <span class="status" v-if="!isEditing && !isNoteUpdating">状态：<el-tag type="success">以保存</el-tag></span>
+                    <span class="status" v-if="!isEditing && !isNoteUpdating">状态：<el-tag type="success">已保存</el-tag></span>
                 </div>
                 <div class="buttons">
-                    <span>预览</span>
-                    <span>删除</span>
+                    <el-button size="mini" @click="previewNote" v-show="!isPreview"><i class="el-icon-view"></i> 预览</el-button>
+                    <el-button size="mini" @click="previewNote" v-show="isPreview"><i class="el-icon-back"></i> 返回编辑</el-button>
+                    <el-button size="mini" type="danger" @click="deleteNote"><i class="el-icon-delete"></i> 删除</el-button>
                 </div>
             </div>
             <div class="main">
@@ -50,7 +51,8 @@
                     <input type="text" placeholder="请输入标题" v-model="curNote.title" @focus="onEditStatusChange" @input="onNoteTitleChange">
                 </div>
                 <div class="note-content">
-                    <textarea  placeholder="写点什么吧~ 支持Markdown语法" v-model="curNote.content" @input="onNoteContentChange" @focus="onEditStatusChange"></textarea>
+                    <textarea v-show="!isPreview" placeholder="写点什么吧~ 支持Markdown语法" v-model="curNote.content" @input="onNoteContentChange" @focus="onEditStatusChange"></textarea>
+                    <div class="preview markdown-body" v-show="isPreview" v-html="markdown"></div>
                 </div>
             </div>
         </div>
@@ -62,6 +64,8 @@ import User from '@/servers/user'
 // import NoteContent from './components/NoteContent.vue'
 import NoteBooksListService from '@/servers/noteBooksListService'
 import NoteBookDetailService from '@/servers/noteBookDetailService'
+import MarkdownIt from 'markdown-it'
+const md = new MarkdownIt()
 
 export default {
     // components: {
@@ -69,22 +73,16 @@ export default {
     // },
     data() {
         return {
-            msg: "笔记详情页",
             noteBookId: '',
             NoteBooksListData: [],
             curNoteBook: {},
             curNote: {},
             isEditing: false,
             isNoteUpdating: false,
+            isPreview: false,
             timeId: '',
-            tableData: [
-                {time: '刚刚', title: '123'},
-                {time: '刚刚', title: '笔记'},
-                {time: '2018-05-12', title: 'fdgfdg'},
-                {time: '刚刚', title: '123'},
-                {time: '刚刚', title: '321'},
-                {time: '刚刚', title: '123'},
-            ]
+            markdown: '',
+            tableData: []
         };
     },
     watch: {
@@ -132,23 +130,32 @@ export default {
                 this.tableData = res.data
             })
         },
-        addNote() {
-            NoteBookDetailService.create().then(res => {
-                console.log(res)
-                this.tableData = res.data
-            })
-        },
         // 下拉菜单点击
         dropMenuChange(item) {
             this.$router.push({name: 'note', params: {notebook_id: item.id}})
             this.curNoteBook = item
             this.noteBookId = item.id
+            this.isPreview = false
             this.loadNoteData()
         },
         // 每个笔记点击时
         onNoteClick(row, event, column) {
-            console.log(row)
+            // console.log(row)
             this.curNote = row
+            this.isNoteUpdating = false
+            this.isEditing = false
+            this.isPreview = false
+        },
+        addNote() {
+            let newNote = {
+                title: '新的笔记',
+                content: ''
+            }
+            this.isPreview = false
+            NoteBookDetailService.create({noteBookId: this.noteBookId}, newNote).then(res => {
+                this.tableData.unshift(res.data)
+                this.curNote = res.data
+            })
         },
         // 笔记内容修改
         onNoteContentChange(val) {
@@ -160,11 +167,11 @@ export default {
             this.timeId = setTimeout(function () {
                 _this.isNoteUpdating = true
                 NoteBookDetailService.update({noteId: _this.curNote.id}, {title: _this.curNote.title, content: _this.curNote.content}).then(res => {
-                    console.log(res)
+                    // console.log(res)
                     _this.isNoteUpdating = false
                     _this.isEditing = false
                 }).catch(res => {
-                    this.$message({
+                    _this.$message({
                         message: res.msg,
                         type: 'error'
                     })
@@ -181,20 +188,52 @@ export default {
             this.timeId = setTimeout(function () {
                 _this.isNoteUpdating = true
                 NoteBookDetailService.update({noteId: _this.curNote.id}, {title: _this.curNote.title, content: _this.curNote.content}).then(res => {
-                    console.log(res)
                     _this.isNoteUpdating = false
                     _this.isEditing = false
                 }).catch(res => {
-                    this.$message({
+                    _this.$message({
                         message: res.msg,
                         type: 'error'
                     })
+                    _this.isNoteUpdating = false
+                    _this.isEditing = true
                 })
             }, 1000)
         },
         // 笔记状态修改
         onEditStatusChange() {
             this.isEditing = true
+        },
+        // 删除
+        deleteNote() {
+            NoteBookDetailService.delete({noteId: this.curNote.id}).then(res => {
+                this.$message({
+                    message: '删除成功，删除的笔记可以在废纸篓恢复哦~',
+                    type: 'success'
+                })
+                this.isNoteUpdating = false
+                this.isEditing = false
+                this.isPreview = false
+                this.loadNoteData()
+            }).catch(res => {
+                this.$message({
+                    message: res.msg,
+                    type: 'error'
+                })
+                this.isNoteUpdating = false
+                this.isEditing = true
+                this.isPreview = false
+            })
+        },
+        // 预览
+        previewNote() {
+            this.markdown = md.render(this.curNote.content)
+            if (this.isPreview) {
+                this.isPreview = false
+            }
+            else {
+                this.isPreview = true
+            }
         }
     }
 };
@@ -208,7 +247,7 @@ export default {
     justify-content: flex-start;
     align-items: flex-start;
     .left-container {
-        width: 450px;
+        width: 320px;
         height: 100%;
         background: #e9eef3;
         .header {
@@ -222,7 +261,7 @@ export default {
             .add-note {
                 position: absolute;
                 right: 10px;
-                top: 50%;
+                top: 48%;
                 transform: translateY(-50%);
             }
             .dropdown {
@@ -260,6 +299,14 @@ export default {
                 .table-link {
                     display: inline-block;
                     width: 100%;
+                    span {
+                        height: 16px;
+                        line-height: 16px;
+                        max-width: 200px;
+                        overflow: hidden;
+                        white-space: nowrap;
+                        text-overflow: ellipsis;
+                    }
                 }
             }
             .table tr{
@@ -269,19 +316,28 @@ export default {
     }
     .right-container {
         flex-grow: 1;
-        min-width: 480px;
+        min-width: 540px;
         height: 100%;
-        width: 100%;
         display: flex;
         flex-direction: column;
         justify-content: flex-start;
         align-items: flex-start;
         .header {
             width: 100%;
+            min-width: 540px;
             height: 60px;
             padding: 0 20px;
             color: #606266;
+            display: flex;
+            justify-content: flex-start;
             .info {
+                flex-grow: 1;
+                width: 430px;
+                display: flex;
+                justify-content: flex-start;
+                align-items: center;
+                flex-wrap: nowrap;
+                margin-right: 10px;
                 .create-time {
                     display: inline-block;
                     width: 150px;
@@ -292,10 +348,17 @@ export default {
                     margin-left: 10px;
                 }
                 .status {
+                    width: 115px;
+                    display: inline-block;
                     margin-left: 10px;
                 }
             }
             .buttons {
+                width: 180px;
+                display: flex;
+                justify-content: flex-start;
+                align-items: center;
+                flex-wrap: nowrap;
                 margin-left: auto;
             }
         }
@@ -338,6 +401,24 @@ export default {
             display: flex;
             align-items: stretch;
             justify-content: flex-start;
+            .preview {
+                width: 100%;
+                overflow-y: auto;
+                padding: 6px 0;
+                pre {
+                    background: #EBEEF5;
+                    padding: 10px;
+                    border-radius: 10px;
+                    code {
+                        color: 	#6495ED;
+                        line-height: 1.5;
+                        font-family: "Helvetica Neue",Helvetica,"PingFang SC","Hiragino Sans GB","Microsoft YaHei","微软雅黑",Arial,sans-serif;
+                    }
+                }
+                ul {
+                    list-style-type: disc;
+                }
+            }
             textarea {
                 width: 100%;
                 overflow-y: auto;

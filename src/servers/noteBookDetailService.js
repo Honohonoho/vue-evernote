@@ -26,9 +26,17 @@ export default {
         })
     },
     // 创建笔记
-    create({noteId}, {title = '', content = ''} = {title: '', content: ''}) {
-        let url = `${BASE_URL}/to/${noteId}`
-        return api(url, 'POST', {title, content})
+    create({noteBookId}, {title = '', content = ''} = {title: '', content: ''}) {
+        return new Promise((resolve, reject) => {
+            let url = `${BASE_URL}/to/${noteBookId}`
+            return api(url, 'POST', {title, content}).then(res => {
+                res.data.create_date_name = formatDate(res.data.createdAt)
+                res.data.update_date_name = formatDate(res.data.updatedAt)
+                resolve(res)
+            }).catch(res => {
+                reject(res)
+            })
+        })
     },
     // 修改笔记
     update({noteId}, {title = '', content = ''} = {title: '', content: ''}) {

@@ -23,7 +23,7 @@ export default {
     display: flex;
     align-items: stretch;
 }
-* {
+div,span {
     box-sizing: border-box;
     margin: 0;
     padding: 0;
@@ -31,6 +31,9 @@ export default {
 
 html, body, #app {
     height: 100%;
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
 }
 
 body {
