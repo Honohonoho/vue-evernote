@@ -1,7 +1,7 @@
 <template>
     <div id="app">
         <NavBar></NavBar>
-        <router-view/>
+        <router-view></router-view>
     </div>
 </template>
 
@@ -19,11 +19,11 @@ export default {
 <style>
 @import '//at.alicdn.com/t/font_496303_kqrjhri8l25d0a4i.css';
 #app { 
-    font-family: 'Avenir', Helvetica, Arial, sans-serif;
+    font-family: "Helvetica Neue",Helvetica,"PingFang SC","Hiragino Sans GB","Microsoft YaHei","微软雅黑",Arial,sans-serif;
     display: flex;
     align-items: stretch;
 }
-* {
+div,span {
     box-sizing: border-box;
     margin: 0;
     padding: 0;
@@ -31,6 +31,9 @@ export default {
 
 html, body, #app {
     height: 100%;
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
 }
 
 body {

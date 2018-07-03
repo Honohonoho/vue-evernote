@@ -1,20 +1,35 @@
 <template>
     <div id="sidebar">
-        <Avatar></Avatar>
-        <div class="icons">
-            <router-link to="/note/1" title="笔记">
-                <i class="iconfont icon-note"></i>
-            </router-link>
-            <router-link to="/notebookslist">
-                <i class="iconfont icon-notebook"></i>
-            </router-link>
-            <router-link to="/trash/2" title="回收站">
-                <i class="iconfont icon-trash"></i>
-            </router-link>
-        </div>
-        <div class="logout" @click="onLogout">
-            <i class="iconfont icon-logout"></i>
-        </div>
+        <el-menu
+            background-color="#545c64"
+            text-color="#fff"
+            active-text-color="#ffd04b"
+            :default-active="'2'"
+        >   
+            <Avatar></Avatar>
+            <el-menu-item index="1">
+                <router-link class="link" :to="{name: 'note', params: {notebook_id: ''}}">
+                    <i class="iconfont icon-note"></i>
+                    <span>笔记本详情</span>
+                </router-link>
+            </el-menu-item>
+            <el-menu-item index="2">
+                <router-link class="link" :to="{path: '/notebookslist'}">
+                    <i class="iconfont icon-notebook"></i>
+                    <span>笔记本列表</span>
+                </router-link>
+            </el-menu-item>
+            <el-menu-item index="3">
+                <router-link class="link" :to="{path: '/trash'}">
+                    <i class="iconfont icon-trash"></i>
+                    <span>废纸篓</span>
+                </router-link>
+            </el-menu-item>
+            <div class="logout" @click="onLogout">
+                <i class="iconfont icon-logout"></i>
+                <span>注销</span>
+            </div>
+        </el-menu>
     </div>
 </template>
 
@@ -29,6 +44,14 @@ export default {
         return {
         }
     },
+    create() {
+        User.getUserInfo().then(res => {
+            if (res.isLogin) {
+                // this.$router.push({path: '/login'})
+                this.$router.push({path: '/notebookslist'})
+            }
+        })
+    },
     methods: {
         onLogout() {
             User.logout().then(res => {
@@ -41,10 +64,19 @@ export default {
 
 <style lang="scss" scoped>
 #sidebar {
-    position: relative;
-    width: 56px;
-    text-align: center;
-    background-color: #2c333c;
+    height: 100%;
+    .el-menu {
+        height: 100%;
+        border-right: none;
+        .link {
+            display: inline-block;
+            width: 100%;
+            color: inherit;
+        }
+        .el-menu-item .iconfont {
+            color: inherit;
+        }
+    }
     .icons {
         margin-top: 15px;
         a {
@@ -61,9 +93,12 @@ export default {
         width: 100%;
         text-align: center;
         cursor: pointer;
-    }
-    .iconfont {
-        color: #fff;
+        .iconfont {
+            color: #F56C6C;
+        }
+        span {
+            color: #F56C6C;
+        }
     }
 }
 </style>

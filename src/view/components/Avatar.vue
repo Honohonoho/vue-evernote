@@ -1,7 +1,8 @@
 <template>
-    <div>
+    <div class="avatar">
         <router-link to="/login">
-            <span :title="username">{{slug}}</span>
+            <span :title="username" class="slug">{{slug}}</span>
+            <span class="name">{{username}}</span>
         </router-link>
     </div>
 </template>
@@ -17,14 +18,17 @@ export default {
         };
     },
     created() {
-        Bus.$on('catchUserInfo', data => {
-            this.username = data.username
-        })
         User.getUserInfo().then(res => {
             console.log(res)
             if (res.isLogin) {
                 this.username = res.data.username
             }
+            else {
+                this.$router.push({path: '/login'})
+            }
+        })
+        Bus.$on('catchUserInfo', data => {
+            this.username = data.username
         })
     },
     computed: {
@@ -36,19 +40,32 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-span {
-    display: inline-block;
-    width: 30px;
-    height: 30px;
-    text-align: center;
-    line-height: 32px;
-    border-radius: 50%;
-    background: #f2b81c;
-    color: #fff;
-    text-shadow: 1px 0 1px #795c19;
-    font-weight: bold;
-    text-transform: uppercase;
-    font-size: 18px;
-    margin-top: 15px;
+.avatar {
+    margin-top: 10px;
+}
+.avatar a{
+    height: 56px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    .slug {
+        display: inline-block;
+        width: 30px;
+        height: 30px;
+        text-align: center;
+        line-height: 30px;
+        border-radius: 50%;
+        background: #f2b81c;
+        color: #fff;
+        text-shadow: 1px 0 1px #795c19;
+        font-weight: bold;
+        text-transform: uppercase;
+        font-size: 18px;
+    }
+    .name {
+        margin-top: 5px;
+        color: #fff;
+    }
 }
 </style>

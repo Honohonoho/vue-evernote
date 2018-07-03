@@ -20,7 +20,7 @@
                             <input type="text" v-model="login.username" placeholder="输入用户名">
                             <input type="password" v-model="login.password" @keyup.enter="onLogin"  placeholder="密码">
                             <p v-bind:class="{error: login.isError}"> {{login.notice}}</p>
-                            <div class="button" @click="onLogin"> 登录</div>
+                            <div class="button" @click="onLogin">{{loginText}}</div>
                         </div>
                     </transition>
                 </div>
@@ -39,6 +39,7 @@ export default {
         return {
             isShowLogin: true,
             isShowRegister: false,
+            loginText: '登录',
             login: {
                 username: '',
                 password: '',
@@ -75,7 +76,6 @@ export default {
             }
             this.register.isError = false
             this.register.notice = ''
-            console.log(`start register..., username: ${this.register.username} , password: ${this.register.password}`)
             User.register({username: this.register.username, password: this.register.password})
                 .then(res => {
                     console.log(res)
@@ -101,7 +101,7 @@ export default {
                 this.login.notice = '密码长度为6~16个字符'
                 return
             }
-            console.log(`start login..., username: ${this.login.username} , password: ${this.login.password}`) 
+            this.loginText = '登录中...'
             User.login({username: this.login.username, password: this.login.password})
                 .then(res => {
                     console.log(res)
