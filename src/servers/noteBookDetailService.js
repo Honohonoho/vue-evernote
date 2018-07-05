@@ -39,9 +39,9 @@ export default {
         })
     },
     // 修改笔记
-    update({noteId}, {title = '', content = ''} = {title: '', content: ''}) {
+    update({noteId, title, content}) {
         let url = `${BASE_URL}/${noteId}`
-        return api(url, 'PATCH', {title ,content})
+        return api(url, 'PATCH', {title, content})
     },
     // 删除笔记
     delete({noteId}) {

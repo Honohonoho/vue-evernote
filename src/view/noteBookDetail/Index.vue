@@ -5,17 +5,18 @@
                 <el-dropdown class="dropdown" @command="dropMenuChange">
                     <span class="el-dropdown-link">
                         {{curNoteBook.title}}
-                        <i class="el-icon-arrow-down el-icon--right"></i>
+                        <!-- <i class="el-icon-arrow-down el-icon--right"></i> -->
                     </span>
+                    <i class="el-icon-arrow-down el-icon--right"></i>
                     <el-dropdown-menu slot="dropdown">
-                        <el-dropdown-item :command="item" v-for="item in NoteBooksListData" :key="item.id">{{item.title}}</el-dropdown-item>
+                        <el-dropdown-item :command="item" v-for="item in noteBookList" :key="item.id">{{item.title}}</el-dropdown-item>
                     </el-dropdown-menu>
                 </el-dropdown>
                 <el-button size="mini" round type="primary" class="add-note" @click="addNote"><i class="el-icon-edit"></i> 添加笔记</el-button>
             </div>
             <div class="main">
                 <div class="list">
-                    <el-table class="table" :data="tableData" style="width: 100%" @row-click="onNoteClick" row-class-name="table-row" header-row-class-name="table-header">
+                    <el-table class="table" :data="notesData" style="width: 100%" @row-click="onNoteClick" row-class-name="table-row" header-row-class-name="table-header">
                         <el-table-column prop="create_date_name" label="更新时间" width="100"></el-table-column>
                         <el-table-column prop="title" label="标题">
                             <template slot-scope="scope">
@@ -43,15 +44,15 @@
                 <div class="buttons">
                     <el-button size="mini" @click="previewNote" v-show="!isPreview"><i class="el-icon-view"></i> 预览</el-button>
                     <el-button size="mini" @click="previewNote" v-show="isPreview"><i class="el-icon-back"></i> 返回编辑</el-button>
-                    <el-button size="mini" type="danger" @click="deleteNote"><i class="el-icon-delete"></i> 删除</el-button>
+                    <el-button size="mini" type="danger" @click="_deleteNote"><i class="el-icon-delete"></i> 删除</el-button>
                 </div>
             </div>
             <div class="main">
                 <div class="note-title">
-                    <input type="text" placeholder="请输入标题" v-model="curNote.title" @focus="onEditStatusChange" @input="onNoteTitleChange">
+                    <input type="text" placeholder="请输入标题" :value="curNote.title" @focus="onEditStatusChange" @input="onNoteTitleChange">
                 </div>
                 <div class="note-content">
-                    <textarea v-show="!isPreview" placeholder="写点什么吧~ 支持Markdown语法" v-model="curNote.content" @input="onNoteContentChange" @focus="onEditStatusChange"></textarea>
+                    <textarea v-show="!isPreview" placeholder="写点什么吧~ 支持Markdown语法" :value="curNote.content" @input="onNoteContentChange" @focus="onEditStatusChange"></textarea>
                     <div class="preview markdown-body" v-show="isPreview" v-html="markdown"></div>
                 </div>
             </div>
@@ -64,6 +65,7 @@ import User from '@/servers/user'
 // import NoteContent from './components/NoteContent.vue'
 import NoteBooksListService from '@/servers/noteBooksListService'
 import NoteBookDetailService from '@/servers/noteBookDetailService'
+import { mapState, mapActions, mapGetters } from 'vuex'
 import MarkdownIt from 'markdown-it'
 const md = new MarkdownIt()
 
@@ -74,15 +76,11 @@ export default {
     data() {
         return {
             noteBookId: '',
-            NoteBooksListData: [],
-            curNoteBook: {},
-            curNote: {},
             isEditing: false,
             isNoteUpdating: false,
             isPreview: false,
             timeId: '',
-            markdown: '',
-            tableData: []
+            markdown: ''
         };
     },
     watch: {
@@ -92,8 +90,16 @@ export default {
     },
     beforeRouteUpdate (to, from, next) {
         this.noteBookId = to.params.notebook_id
-        this.loadNoteBooksList()
         next()
+    },
+    computed: {
+        ...mapGetters([
+            'setCurNoteBook',
+            'noteBookList',
+            'notesData',
+            'curNoteBook',
+            'curNote'
+        ])
     },
     created() {
         User.getUserInfo().then(res => {
@@ -104,44 +110,45 @@ export default {
         if (this.$route.params.notebook_id !== '') {
             this.noteBookId = this.$route.params.notebook_id
         }
-        this.loadNoteBooksList()
+        this._getNoteBookList()
     },
     methods: {
-        loadNoteBooksList() {
-            NoteBooksListService.get().then(res => {
-                this.NoteBooksListData = res.data
-                if (this.noteBookId !== '') {
-                    res.data.forEach(item => {
+        ...mapActions([
+            'getNoteBookList',
+            'getNotesData',
+            'createNote',
+            'updateNote',
+            'deleteNote'
+        ]),
+        _getNoteBookList() {
+            this.getNoteBookList().then(() => {
+                if (this.noteBookId == '') {
+                    this.$route.params.notebook_id = this.noteBookList[0].id
+                    this.noteBookId = this.noteBookList[0].id
+                    this.$store.commit('setCurNoteBook', {curNoteBook: this.noteBookList[0]})
+                }
+                else {
+                    this.noteBookId = this.$route.params.notebook_id
+                    this.noteBookList.forEach(item => {
                         if (item.id == this.noteBookId) {
-                            this.curNoteBook = item
+                            this.$store.commit('setCurNoteBook', {curNoteBook: item})
                         }
                     })
                 }
-                else {
-                    this.$route.params.notebook_id = res.data[0].id
-                    this.noteBookId = res.data[0].id
-                    this.curNoteBook = res.data[0]
-                }
-                this.loadNoteData()
-            })
-        },
-        loadNoteData() {
-            NoteBookDetailService.get({noteBookId: this.noteBookId}).then(res => {
-                this.tableData = res.data
+                this.getNotesData({noteBookId: this.noteBookId})
             })
         },
         // 下拉菜单点击
         dropMenuChange(item) {
             this.$router.push({name: 'note', params: {notebook_id: item.id}})
-            this.curNoteBook = item
+            this.$store.commit('setCurNoteBook', {curNoteBook: item})
             this.noteBookId = item.id
             this.isPreview = false
-            this.loadNoteData()
+            this.getNotesData({noteBookId: item.id})
         },
         // 每个笔记点击时
         onNoteClick(row, event, column) {
-            // console.log(row)
-            this.curNote = row
+            this.$store.commit('setCurNote', {curNote: row})
             this.isNoteUpdating = false
             this.isEditing = false
             this.isPreview = false
@@ -151,53 +158,44 @@ export default {
                 title: '新的笔记',
                 content: ''
             }
+            newNote.noteBookId = this.noteBookId
             this.isPreview = false
-            NoteBookDetailService.create({noteBookId: this.noteBookId}, newNote).then(res => {
-                this.tableData.unshift(res.data)
-                this.curNote = res.data
-            })
+            this.createNote(newNote)
         },
         // 笔记内容修改
         onNoteContentChange(val) {
             let _this = this
-            this.curNote.content = val.target.value
+            let newCurNote = this.curNote
+            newCurNote.content = val.target.value
+            this.$store.commit('setCurNote', {curNote: newCurNote})
             this.isEditing = true
             //节流
             clearTimeout(this.timeId)
             this.timeId = setTimeout(function () {
                 _this.isNoteUpdating = true
-                NoteBookDetailService.update({noteId: _this.curNote.id}, {title: _this.curNote.title, content: _this.curNote.content}).then(res => {
-                    // console.log(res)
-                    _this.isNoteUpdating = false
-                    _this.isEditing = false
-                }).catch(res => {
-                    _this.$message({
-                        message: res.msg,
-                        type: 'error'
+                _this.updateNote({noteId: _this.curNote.id, title: _this.curNote.title, content: _this.curNote.content})
+                    .then(() => {
+                        _this.isNoteUpdating = false
+                        _this.isEditing = false
                     })
-                })
             }, 1000)
         },
         // 笔记标题修改
         onNoteTitleChange(val) {
             let _this = this
-            this.curNote.title = val.target.value
+            let newCurNote = this.curNote
+            newCurNote.title = val.target.value
+            this.$store.commit('setCurNote', {curNote: newCurNote})
             this.isEditing = true
             //节流
             clearTimeout(this.timeId)
             this.timeId = setTimeout(function () {
                 _this.isNoteUpdating = true
-                NoteBookDetailService.update({noteId: _this.curNote.id}, {title: _this.curNote.title, content: _this.curNote.content}).then(res => {
-                    _this.isNoteUpdating = false
-                    _this.isEditing = false
-                }).catch(res => {
-                    _this.$message({
-                        message: res.msg,
-                        type: 'error'
+                _this.updateNote({noteId: _this.curNote.id, title: _this.curNote.title, content: _this.curNote.content})
+                    .then(() => {
+                        _this.isNoteUpdating = false
+                        _this.isEditing = false
                     })
-                    _this.isNoteUpdating = false
-                    _this.isEditing = true
-                })
             }, 1000)
         },
         // 笔记状态修改
@@ -205,21 +203,14 @@ export default {
             this.isEditing = true
         },
         // 删除
-        deleteNote() {
-            NoteBookDetailService.delete({noteId: this.curNote.id}).then(res => {
-                this.$message({
-                    message: '删除成功，删除的笔记可以在废纸篓恢复哦~',
-                    type: 'success'
-                })
+        _deleteNote() {
+            this.deleteNote({noteId: this.curNote.id}).then(() => {
                 this.isNoteUpdating = false
                 this.isEditing = false
                 this.isPreview = false
-                this.loadNoteData()
-            }).catch(res => {
-                this.$message({
-                    message: res.msg,
-                    type: 'error'
-                })
+                this.getNotesData({noteBookId: this.noteBookId})
+            })
+            .catch(res => {
                 this.isNoteUpdating = false
                 this.isEditing = true
                 this.isPreview = false
@@ -265,13 +256,21 @@ export default {
                 transform: translateY(-50%);
             }
             .dropdown {
+                left: -10px;
+                display: flex;
+                align-items: center;
                 .el-dropdown-link {
+                    position: relative;
+                    max-width: 100px;
                     display: inline-block;
                     color: #222;
-                    max-width: 200px;
                     overflow: hidden;
                     white-space: nowrap;
                     text-overflow: ellipsis;
+                }
+                .el-icon-arrow-down {
+                    margin-top: 3px;
+                    margin-left: 5px;
                 }
             }
         }
@@ -382,7 +381,6 @@ export default {
                 -moz-appearance: none;
                 outline: 0;
                 height: 54px;
-                padding: 10px 0;
                 line-height: 54px;
                 font-size: 24px;
                 color: #606266;
@@ -405,6 +403,7 @@ export default {
                 width: 100%;
                 overflow-y: auto;
                 padding: 6px 0;
+                font-size: 16px;
                 pre {
                     background: #EBEEF5;
                     padding: 10px;
@@ -415,7 +414,7 @@ export default {
                         font-family: "Helvetica Neue",Helvetica,"PingFang SC","Hiragino Sans GB","Microsoft YaHei","微软雅黑",Arial,sans-serif;
                     }
                 }
-                ul {
+                ul,li,ol {
                     list-style-type: disc;
                 }
             }

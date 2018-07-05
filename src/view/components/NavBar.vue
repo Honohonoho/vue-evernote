@@ -44,11 +44,13 @@ export default {
         return {
         }
     },
-    create() {
+    created() {
         User.getUserInfo().then(res => {
             if (res.isLogin) {
-                // this.$router.push({path: '/login'})
                 this.$router.push({path: '/notebookslist'})
+            }
+            else {
+                this.$router.push({path: '/login'})
             }
         })
     },
