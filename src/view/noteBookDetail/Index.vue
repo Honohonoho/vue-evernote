@@ -18,7 +18,7 @@
                 <div class="list">
                     <el-table class="table" :data="notesData" style="width: 100%" @row-click="onNoteClick" row-class-name="table-row" header-row-class-name="table-header">
                         <el-table-column prop="create_date_name" label="更新时间" width="100"></el-table-column>
-                        <el-table-column prop="title" label="标题">
+                        <el-table-column prop="title" label="笔记标题">
                             <template slot-scope="scope">
                                 <router-link class="table-link" :to="{ path: `/note/${noteBookId}`, query: { note_id: scope.row.id } }">
                                     <span>
