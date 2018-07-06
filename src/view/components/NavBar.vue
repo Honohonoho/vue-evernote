@@ -8,7 +8,7 @@
         >   
             <Avatar></Avatar>
             <el-menu-item index="1">
-                <router-link class="link" :to="{name: 'note', params: {notebook_id: ''}}">
+                <router-link class="link" :to="{name: 'note', params: {notebook_id: defaultNoteBookId}}">
                     <i class="iconfont icon-note"></i>
                     <span>笔记本详情</span>
                 </router-link>
@@ -36,28 +36,48 @@
 <script>
 import Avatar from '@/view/components/Avatar.vue'
 import User from '@/servers/user' 
+import {mapGetters, mapActions} from 'vuex'
 export default {
     components: {
         Avatar
     },
     data() {
         return {
+            defaultNoteBookId: ''
         }
     },
     created() {
-        User.getUserInfo().then(res => {
-            if (res.isLogin) {
-                this.$router.push({path: '/notebookslist'})
-            }
-            else {
-                this.$router.push({path: '/login'})
-            }
+        this.checkLogin().then(() => {
+        }).catch(res => {
+            this.$message({
+                message: '请先登录',
+                type: 'error'
+            })
+            this.$router.push({path: '/login'})
+        })
+        this.getNoteBookList().then(() => {
+            this.defaultNoteBookId = this.noteBookList[0].id
         })
     },
+    computed: {
+        ...mapGetters([
+            'noteBookList'
+        ])
+    },
     methods: {
+        ...mapActions([
+            'checkLogin',
+            'logout',
+            'getNoteBookList'
+        ]),
         onLogout() {
-            User.logout().then(res => {
+            this.logout().then(res => {
                 console.log(res)
+                this.$message({
+                    message: '成功退出~',
+                    type: 'success'
+                })
+                this.$router.push({path: '/login'})
             })
         }
     }

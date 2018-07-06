@@ -102,15 +102,20 @@ export default {
         ])
     },
     created() {
-        User.getUserInfo().then(res => {
-            if (!res.isLogin) {
-                this.$router.push({path: '/login'})
+        this.checkLogin().then(res => {
+            if (this.$route.params.notebook_id !== '') {
+                this.noteBookId = this.$route.params.notebook_id
             }
+            this._getNoteBookList()
+            this.$store.dispatch('getNoteBookList')
         })
-        if (this.$route.params.notebook_id !== '') {
-            this.noteBookId = this.$route.params.notebook_id
-        }
-        this._getNoteBookList()
+        .catch(res => {
+            this.$message({
+                message: '请先登录',
+                type: 'error'
+            })
+            this.$router.push({path: '/login'})
+        })
     },
     methods: {
         ...mapActions([
@@ -118,7 +123,8 @@ export default {
             'getNotesData',
             'createNote',
             'updateNote',
-            'deleteNote'
+            'deleteNote',
+            'checkLogin'
         ]),
         _getNoteBookList() {
             this.getNoteBookList().then(() => {

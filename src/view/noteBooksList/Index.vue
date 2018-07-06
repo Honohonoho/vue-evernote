@@ -42,36 +42,31 @@ export default {
         }
     },
     computed: {
-        // tableData () {
-        //     return this.$store.getters.noteBookList
-        // },
         total () {
             return this.$store.getters.noteBookList.length
         },
         ...mapGetters({tableData: 'noteBookList'})
     },
     created() {
-        User.getUserInfo().then(res => {
-            if (!res.isLogin) {
-                this.$router.push({path: '/login'})
-            }
+        this.checkLogin().then(res => {
+            this.$store.dispatch('getNoteBookList')
         })
-        this.$store.dispatch('getNoteBookList')
+        .catch(res => {
+            this.$message({
+                message: '请先登录',
+                type: 'error'
+            })
+            this.$router.push({path: '/login'})
+        })
     },
     methods: {
         ...mapActions([
             'getNoteBookList',
             'createNoteBook',
             'updateNoteBook',
-            'deleteNoteBook'
+            'deleteNoteBook',
+            'checkLogin'
         ]),
-        // 获取列表
-        // _getNoteBookList() {
-        //     NoteBooksListService.get().then(res => {
-        //         this.tableData = res.data
-        //         this.total = res.data.length
-        //     })
-        // },
         // 创建
         _createNoteBook() {
             this.$prompt('', '请输入笔记本标题', {
