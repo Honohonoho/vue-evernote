@@ -6,11 +6,11 @@
             </div>
             <div class="main">
                 <div class="list">
-                    <el-table class="table" :data="notesData" style="width: 100%" @row-click="onNoteClick" row-class-name="table-row" header-row-class-name="table-header">
+                    <el-table class="table" :data="trashNotes" style="width: 100%" @row-click="onNoteClick" row-class-name="table-row" header-row-class-name="table-header">
                         <el-table-column prop="create_date_name" label="更新时间" width="100"></el-table-column>
                         <el-table-column prop="title" label="笔记标题">
                             <template slot-scope="scope">
-                                <router-link class="table-link" :to="{ path: `/note/${noteBookId}`, query: { note_id: scope.row.id } }">
+                                <router-link class="table-link" :to="{ path: '/trash', query: { note_id: scope.row.id } }">
                                     <span>
                                         {{scope.row.title}}
                                     </span>
@@ -25,21 +25,21 @@
             <!-- <NoteContent v-bind:noteData="curNote" v-on:noteTitleChange="handleNoteTitleChange"></NoteContent> -->
             <div class="header">
                 <div class="info">
-                    <span class="create-time">创建日期：{{curNote.create_date_name}}</span>
-                    <span class="update-time">更新日期：{{curNote.update_date_name}}</span>
+                    <span class="create-time">创建日期：{{curTrashNote.create_date_name || ''}}</span>
+                    <span class="update-time">更新日期：{{curTrashNote.update_date_name || ''}}</span>
+                    <span class="belong-to">所属笔记本：{{belongTo.title || ''}}</span>
                 </div>
                 <div class="buttons">
-                    <el-button size="mini" type="danger" @click="_deleteNote"><i class="el-icon-delete"></i> 彻底删除</el-button>
-                    <el-button size="mini" type="success" @click="previewNote"><i class="el-icon-view"></i> 恢复</el-button>
+                    <el-button size="mini" type="danger" @click="_deleteNote" :disabled="trashNotes.length == 0"><i class="el-icon-delete"></i> 彻底删除</el-button>
+                    <el-button size="mini" type="success" @click="_revertNote" :disabled="trashNotes.length == 0"><i class="el-icon-refresh"></i> 恢复</el-button>
                 </div>
             </div>
-            <div class="main">
+            <div class="main" v-if="isPreview">
                 <div class="note-title">
-                    <input type="text" placeholder="请输入标题" :value="curNote.title" @focus="onEditStatusChange" @input="onNoteTitleChange">
+                    <p class="title">{{curTrashNote.title}}</p>
                 </div>
                 <div class="note-content">
-                    <textarea v-show="!isPreview" placeholder="写点什么吧~ 支持Markdown语法" :value="curNote.content" @input="onNoteContentChange" @focus="onEditStatusChange"></textarea>
-                    <div class="preview markdown-body" v-show="isPreview" v-html="markdown"></div>
+                    <div class="preview markdown-body" v-html="markdown"></div>
                 </div>
             </div>
         </div>
@@ -47,11 +47,7 @@
 </template>
 
 <script>
-import User from '@/servers/user'
-// import NoteContent from './components/NoteContent.vue'
-import NoteBooksListService from '@/servers/noteBooksListService'
-import NoteBookDetailService from '@/servers/noteBookDetailService'
-import { mapState, mapActions, mapGetters } from 'vuex'
+import { mapState, mapMutations, mapActions, mapGetters } from 'vuex'
 import MarkdownIt from 'markdown-it'
 const md = new MarkdownIt()
 
@@ -61,37 +57,33 @@ export default {
     // },
     data() {
         return {
-            noteBookId: '',
-            isPreview: false,
-            timeId: '',
-            markdown: ''
+            markdown: '',
+            belongTo: {},
+            isPreview: false
         };
     },
     watch: {
-        '$route': function(val) {
-            // console.log(val)
-        }
-    },
-    beforeRouteUpdate (to, from, next) {
-        this.noteBookId = to.params.notebook_id
-        next()
     },
     computed: {
         ...mapGetters([
-            'setCurNoteBook',
-            'noteBookList',
-            'notesData',
-            'curNoteBook',
-            'curNote'
+            'trashNotes',
+            'curTrashNote',
+            'noteBookList'
         ])
     },
     created() {
         this.checkLogin().then(res => {
-            if (this.$route.params.notebook_id !== '') {
-                this.noteBookId = this.$route.params.notebook_id
-            }
-            this._getNoteBookList()
-            this.$store.dispatch('getNoteBookList')
+            this.getTrashNotes().then(() => {
+                if (!this.trashNotes.length == 0) {
+                    this.setCurTrashNote({curTrashNoteId: this.trashNotes[0].id})
+                    this.belongTo = this.noteBookList.find(noteBook => {
+                        if (noteBook.id == this.trashNotes[0].notebookId) {
+                            return noteBook
+                        }
+                    })
+                    this.previewNote()
+                }
+            })
         })
         .catch(res => {
             this.$message({
@@ -102,89 +94,44 @@ export default {
         })
     },
     methods: {
+        ...mapMutations([
+           'setCurTrashNote'
+        ]),
         ...mapActions([
-            'getNoteBookList',
-            'getNotesData',
-            'createNote',
-            'updateNote',
-            'deleteNote',
+            'getTrashNotes',
+            'deleteTrashNote',
+            'revertTrashNote',
             'checkLogin'
         ]),
-        _getNoteBookList() {
-            this.getNoteBookList().then(() => {
-                if (this.noteBookId == '') {
-                    this.$route.params.notebook_id = this.noteBookList[0].id
-                    this.noteBookId = this.noteBookList[0].id
-                    this.$store.commit('setCurNoteBook', {curNoteBook: this.noteBookList[0]})
-                }
-                else {
-                    this.noteBookId = this.$route.params.notebook_id
-                    this.noteBookList.forEach(item => {
-                        if (item.id == this.noteBookId) {
-                            this.$store.commit('setCurNoteBook', {curNoteBook: item})
-                        }
-                    })
-                }
-                this.getNotesData({noteBookId: this.noteBookId})
-            })
-        },
         // 每个笔记点击时
         onNoteClick(row, event, column) {
-            this.$store.commit('setCurNote', {curNote: row})
-            this.isPreview = false
-        },
-        // 笔记内容修改
-        onNoteContentChange(val) {
-            let _this = this
-            let newCurNote = this.curNote
-            newCurNote.content = val.target.value
-            this.$store.commit('setCurNote', {curNote: newCurNote})
-            //节流
-            clearTimeout(this.timeId)
-            this.timeId = setTimeout(function () {
-                _this.isNoteUpdating = true
-                _this.updateNote({noteId: _this.curNote.id, title: _this.curNote.title, content: _this.curNote.content})
-                    .then(() => {
-                    })
-            }, 1000)
-        },
-        // 笔记标题修改
-        onNoteTitleChange(val) {
-            let _this = this
-            let newCurNote = this.curNote
-            newCurNote.title = val.target.value
-            this.$store.commit('setCurNote', {curNote: newCurNote})
-            //节流
-            clearTimeout(this.timeId)
-            this.timeId = setTimeout(function () {
-                _this.isNoteUpdating = true
-                _this.updateNote({noteId: _this.curNote.id, title: _this.curNote.title, content: _this.curNote.content})
-                    .then(() => {
-                    })
-            }, 1000)
-        },
-        // 笔记状态修改
-        onEditStatusChange() {
+            this.setCurTrashNote({curTrashNoteId: row.id})
         },
         // 删除
         _deleteNote() {
-            this.deleteNote({noteId: this.curNote.id}).then(() => {
-                this.isPreview = false
-                this.getNotesData({noteBookId: this.noteBookId})
+            this.deleteTrashNote({noteId: this.curTrashNote.id}).then(() => {
+                this.getTrashNotes()
+                this.setCurTrashNote({curTrashNoteId: ''})
+                this.markdown = ''
+                if (this.trashNotes.length == 0) {
+                    this.belongTo.title = ''
+                }
             })
-            .catch(res => {
-                this.isPreview = false
+        },
+        _revertNote() {
+            this.revertTrashNote({noteId: this.curTrashNote.id}).then(() => {
+                this.getTrashNotes()
+                this.setCurTrashNote({curTrashNoteId: ''})
+                this.markdown = ''
+                if (this.trashNotes.length == 0) {
+                    this.belongTo.title = ''
+                }
             })
         },
         // 预览
         previewNote() {
-            this.markdown = md.render(this.curNote.content)
-            if (this.isPreview) {
-                this.isPreview = false
-            }
-            else {
-                this.isPreview = true
-            }
+            this.markdown = md.render(this.curTrashNote.content)
+            this.isPreview = true
         }
     }
 };
@@ -205,12 +152,17 @@ export default {
             padding: 0 10px;
             height: 60px;
             background: #b3c0d1;
+            justify-content: center;
             .title {
                 font-size: 18px;
             }
         }
         .main {
             background: #e9eef3;
+            .list {
+                overflow-y: auto;
+                max-height: calc(100vh - 60px);
+            }
             .table {
                 .el-table__header-wrapper {
                     font-size: 14px;
@@ -266,7 +218,7 @@ export default {
             justify-content: flex-start;
             .info {
                 flex-grow: 1;
-                width: 430px;
+                width: 520px;
                 display: flex;
                 justify-content: flex-start;
                 align-items: center;
@@ -274,17 +226,22 @@ export default {
                 margin-right: 10px;
                 .create-time {
                     display: inline-block;
-                    width: 150px;
+                    width: 160px;
                 }
                 .update-time {
                     display: inline-block;
-                    width: 150px;
+                    width: 160px;
                     margin-left: 10px;
                 }
-                .status {
-                    width: 115px;
+                .belong-to {
+                    min-width: 180px;
+                    height: 19px;
+                    line-height: 20px;
                     display: inline-block;
                     margin-left: 10px;
+                    overflow: hidden;
+                    white-space: nowrap;
+                    text-overflow: ellipsis;
                 }
             }
             .buttons {
@@ -308,22 +265,14 @@ export default {
             width: 100%;
             height: 54px;
             padding: 0 20px;
-            input {
+            .title {
                 width: 100%;
-                border: none;
                 background: #F2F6FC;
-                -web-kit-appearance: none;
-                -moz-appearance: none;
-                outline: 0;
                 height: 54px;
                 line-height: 54px;
                 font-size: 24px;
                 color: #606266;
-                font-family: "Microsoft YaHei","微软雅黑",Arial,sans-serif;
-            }
-            input::-webkit-input-placeholder {
-                font-size: 24px;
-                font-family: "Helvetica Neue",Helvetica,"PingFang SC","Hiragino Sans GB","Microsoft YaHei","微软雅黑",Arial,sans-serif;
+                margin: 0;
             }
         }
         .note-content {
