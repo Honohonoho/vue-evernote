@@ -54,7 +54,7 @@ const mutations = {
 }
 const actions = {
     getNotesData({ commit }, { noteBookId }) {
-        NoteBookDetailService.get({ noteBookId }).then(res => {
+        return NoteBookDetailService.get({ noteBookId }).then(res => {
             commit('setNotes', { notesData: res.data })
         })
     },

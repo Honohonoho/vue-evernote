@@ -4,22 +4,22 @@
             background-color="#545c64"
             text-color="#fff"
             active-text-color="#ffd04b"
-            :default-active="'2'"
+            :default-active="routeName"
         >   
             <Avatar></Avatar>
-            <el-menu-item index="1">
+            <el-menu-item index="note">
                 <router-link class="link" :to="{name: 'note', params: {notebook_id: defaultNoteBookId}}">
                     <i class="iconfont icon-note"></i>
                     <span>笔记本详情</span>
                 </router-link>
             </el-menu-item>
-            <el-menu-item index="2">
+            <el-menu-item index="notebookslist">
                 <router-link class="link" :to="{path: '/notebookslist'}">
                     <i class="iconfont icon-notebook"></i>
                     <span>笔记本列表</span>
                 </router-link>
             </el-menu-item>
-            <el-menu-item index="3">
+            <el-menu-item index="trash">
                 <router-link class="link" :to="{path: '/trash'}">
                     <i class="iconfont icon-trash"></i>
                     <span>废纸篓</span>
@@ -36,18 +36,24 @@
 <script>
 import Avatar from '@/view/components/Avatar.vue'
 import User from '@/servers/user' 
-import {mapGetters, mapActions} from 'vuex'
+import {mapGetters, mapActions, mapMutations} from 'vuex'
 export default {
     components: {
         Avatar
     },
     data() {
         return {
-            defaultNoteBookId: ''
+            defaultNoteBookId: '',
+            routeName: 'notebookslist'
         }
     },
     created() {
         this.checkLogin().then(() => {
+            this.getNoteBookList().then(() => {
+                this.defaultNoteBookId = this.noteBookList[0].id
+            })
+            this.routeName = this.$route.name
+            this.$router.push({path: this.$route.fullPath})
         }).catch(res => {
             this.$message({
                 message: '请先登录',
@@ -55,9 +61,11 @@ export default {
             })
             this.$router.push({path: '/login'})
         })
-        this.getNoteBookList().then(() => {
-            this.defaultNoteBookId = this.noteBookList[0].id
-        })
+    },
+    watch: {
+        '$route': function(val) {
+            this.routeName = val.name
+        }
     },
     computed: {
         ...mapGetters([
@@ -65,6 +73,9 @@ export default {
         ])
     },
     methods: {
+        ...mapMutations([
+            'setUser'
+        ]),
         ...mapActions([
             'checkLogin',
             'logout',
@@ -72,11 +83,11 @@ export default {
         ]),
         onLogout() {
             this.logout().then(res => {
-                console.log(res)
                 this.$message({
                     message: '成功退出~',
                     type: 'success'
                 })
+                this.setUser({user: {username: '未登录', slug: '未'}})
                 this.$router.push({path: '/login'})
             })
         }

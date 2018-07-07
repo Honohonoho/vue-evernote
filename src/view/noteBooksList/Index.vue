@@ -6,7 +6,7 @@
         <el-main class="main">
             <p class="list-title">笔记本列表({{total}})</p>
             <div class="list">
-                <el-table :data="tableData" border style="width: 100%" row-class-name="table-row">
+                <el-table :data="tableData" height="500" border style="width: 100%" row-class-name="table-row">
                     <el-table-column prop="title" label="标题">
                         <template slot-scope="scope">
                             <router-link class="table-link" :to="{ name: 'note', params: {notebook_id: scope.row.id} }">

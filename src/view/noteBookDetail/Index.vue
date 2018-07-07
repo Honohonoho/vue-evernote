@@ -35,21 +35,24 @@
             <!-- <NoteContent v-bind:noteData="curNote" v-on:noteTitleChange="handleNoteTitleChange"></NoteContent> -->
             <div class="header">
                 <div class="info">
-                    <span class="create-time">创建日期：{{curNote.create_date_name}}</span>
-                    <span class="update-time">更新日期：{{curNote.update_date_name}}</span>
-                    <span class="status" v-if="isEditing && !isNoteUpdating">状态：<el-tag >正在输入</el-tag></span>
-                    <span class="status" v-if="isNoteUpdating">状态：<el-tag type="info">保存中</el-tag></span>
-                    <span class="status" v-if="!isEditing && !isNoteUpdating">状态：<el-tag type="success">已保存</el-tag></span>
+                    <span class="create-time">创建日期：{{curNote.create_date_name ? curNote.create_date_name : ''}}</span>
+                    <span class="update-time">更新日期：{{curNote.update_date_name ? curNote.update_date_name : ''}}</span>
+                    <span class="status">
+                        状态：
+                        <el-tag v-if="isEditing && !isNoteUpdating">正在输入</el-tag>
+                        <el-tag v-if="isNoteUpdating" type="info">保存中</el-tag>
+                        <el-tag v-if="!isEditing && !isNoteUpdating && notesData.length !== 0" type="success">已保存</el-tag>
+                    </span>
                 </div>
                 <div class="buttons">
-                    <el-button size="mini" @click="previewNote" v-show="!isPreview"><i class="el-icon-view"></i> 预览</el-button>
+                    <el-button size="mini" @click="previewNote" v-show="!isPreview" :disabled="notesData.length == 0 && noteBookList.length == 0"><i class="el-icon-view"></i> 预览</el-button>
                     <el-button size="mini" @click="previewNote" v-show="isPreview"><i class="el-icon-back"></i> 返回编辑</el-button>
-                    <el-button size="mini" type="danger" @click="_deleteNote"><i class="el-icon-delete"></i> 删除</el-button>
+                    <el-button size="mini" type="danger" @click="_deleteNote" :disabled="notesData.length == 0 && noteBookList.length == 0"><i class="el-icon-delete"></i> 删除</el-button>
                 </div>
             </div>
-            <div class="main">
+            <div class="main" v-if="notesData.length !== 0 || showEditor">
                 <div class="note-title">
-                    <input type="text" placeholder="请输入标题" :value="curNote.title" @focus="onEditStatusChange" @input="onNoteTitleChange">
+                    <input type="text" placeholder="请输入标题" :value="curNote.title ? curNote.title : ''" @focus="onEditStatusChange" @input="onNoteTitleChange">
                 </div>
                 <div class="note-content">
                     <textarea v-show="!isPreview" placeholder="写点什么吧~ 支持Markdown语法" :value="curNote.content" @input="onNoteContentChange" @focus="onEditStatusChange"></textarea>
@@ -65,7 +68,7 @@ import User from '@/servers/user'
 // import NoteContent from './components/NoteContent.vue'
 import NoteBooksListService from '@/servers/noteBooksListService'
 import NoteBookDetailService from '@/servers/noteBookDetailService'
-import { mapState, mapActions, mapGetters } from 'vuex'
+import { mapState, mapActions, mapMutations, mapGetters } from 'vuex'
 import MarkdownIt from 'markdown-it'
 const md = new MarkdownIt()
 
@@ -79,6 +82,7 @@ export default {
             isEditing: false,
             isNoteUpdating: false,
             isPreview: false,
+            showEditor: false,
             timeId: '',
             markdown: ''
         };
@@ -107,7 +111,6 @@ export default {
                 this.noteBookId = this.$route.params.notebook_id
             }
             this._getNoteBookList()
-            this.$store.dispatch('getNoteBookList')
         })
         .catch(res => {
             this.$message({
@@ -118,6 +121,9 @@ export default {
         })
     },
     methods: {
+        ...mapMutations([
+            'setCurNote'
+        ]),
         ...mapActions([
             'getNoteBookList',
             'getNotesData',
@@ -141,7 +147,11 @@ export default {
                         }
                     })
                 }
-                this.getNotesData({noteBookId: this.noteBookId})
+                this.getNotesData({noteBookId: this.noteBookId}).then(() => {
+                    if (this.notesData.length !== 0) {
+                        this.setCurNote({curNote: this.notesData[0]})
+                    }
+                })
             })
         },
         // 下拉菜单点击
@@ -165,8 +175,10 @@ export default {
                 content: ''
             }
             newNote.noteBookId = this.noteBookId
+            this.showEditor = true
             this.isPreview = false
             this.createNote(newNote)
+            this.$store.commit('setCurNote', {curNote: newNote})
         },
         // 笔记内容修改
         onNoteContentChange(val) {
@@ -214,7 +226,16 @@ export default {
                 this.isNoteUpdating = false
                 this.isEditing = false
                 this.isPreview = false
-                this.getNotesData({noteBookId: this.noteBookId})
+                this.markdown = ''
+                this.getNotesData({noteBookId: this.noteBookId}).then(() => {
+                    let voidNote = {
+                        create_date_name: '',
+                        update_date_name: '',
+                        title: '',
+                        content: ''
+                    }
+                    this.setCurNote({ curNote: this.notesData[0] || {} })
+                })
             })
             .catch(res => {
                 this.isNoteUpdating = false
@@ -282,6 +303,10 @@ export default {
         }
         .main {
             background: #e9eef3;
+            .list {
+                overflow-y: auto;
+                max-height: calc(100vh - 60px);
+            }
             .table {
                 .el-table__header-wrapper {
                     font-size: 14px;
@@ -353,7 +378,7 @@ export default {
                     margin-left: 10px;
                 }
                 .status {
-                    width: 115px;
+                    width: 120px;
                     display: inline-block;
                     margin-left: 10px;
                 }
