@@ -31,7 +31,7 @@
 
 <script>
 import User from '@/servers/user'
-import Bus from '@/utils/bus'
+import {mapGetters, mapActions} from 'vuex'
 
 export default {
     name: 'Login',
@@ -55,6 +55,10 @@ export default {
         }
     }, 
     methods: {
+        ...mapActions({
+            handleLogin: 'login',
+            handleRegister: 'register'
+        }),
         showLogin(){
             this.isShowLogin = true
             this.isShowRegister = false
@@ -76,12 +80,10 @@ export default {
             }
             this.register.isError = false
             this.register.notice = ''
-            User.register({username: this.register.username, password: this.register.password})
-                .then(res => {
-                    console.log(res)
+            this.handleRegister({username: this.register.username, password: this.register.password})
+                .then(() => {
                     this.register.isError = false
                     this.register.notice = ''
-                    Bus.$emit('catchUserInfo', res.data)
                     this.$router.push({path: '/notebookslist'})
                 })
                 .catch(res => {
@@ -102,16 +104,14 @@ export default {
                 return
             }
             this.loginText = '登录中...'
-            User.login({username: this.login.username, password: this.login.password})
-                .then(res => {
-                    console.log(res)
+            this.handleLogin({username: this.login.username, password: this.login.password})
+                .then(() => {
                     this.login.isError = false
                     this.login.notice = ''
-                    Bus.$emit('catchUserInfo', res.data)
                     this.$router.push({path: '/notebookslist'})
                 })
-                .catch(res => {
-                    console.log(res)
+                .catch(() => {
+                    console.log(1)
                     this.login.isError = true
                     this.login.notice = res.msg
                 })

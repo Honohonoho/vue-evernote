@@ -1,14 +1,14 @@
 import api from './api'
 import {formatDate} from '@/utils/utils'
 
-// 笔记本详情相关功能
+// 废纸篓相关功能
 const BASE_URL = '/notes'
 
 export default {
-    // 获取笔记列表
-    get({noteBookId}) {
+    // 获取删除的笔记列表
+    get() {
         return new Promise((resolve, reject) => {
-            let url = `${BASE_URL}/from/${noteBookId}`
+            let url = `${BASE_URL}/trash`
             api(url, 'GET').then(res => {
                 res.data = res.data.sort((note1, note2) => {
                     return note1.createdAt < note2.createdAt
@@ -25,27 +25,20 @@ export default {
             })
         })
     },
-    // 创建笔记
-    create({noteBookId}, {title = '', content = ''} = {title: '', content: ''}) {
+    // 恢复笔记
+    revert({ noteId }) {
         return new Promise((resolve, reject) => {
-            let url = `${BASE_URL}/to/${noteBookId}`
-            return api(url, 'POST', {title, content}).then(res => {
-                res.data.create_date_name = formatDate(res.data.createdAt)
-                res.data.update_date_name = formatDate(res.data.updatedAt)
+            let url = `${BASE_URL}/${noteId}/revert`
+            return api(url, 'PATCH').then(res => {
                 resolve(res)
             }).catch(res => {
                 reject(res)
             })
         })
     },
-    // 修改笔记
-    update({noteId, title, content}) {
-        let url = `${BASE_URL}/${noteId}`
-        return api(url, 'PATCH', {title, content})
-    },
-    // 删除笔记
+    // 彻底删除笔记
     delete({noteId}) {
-        let url = `${BASE_URL}/${noteId}`
+        let url = `${BASE_URL}/${noteId}/confirm`
         return api(url, 'DELETE')
     }
 }

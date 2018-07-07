@@ -42,6 +42,8 @@ body {
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;  
     background-color: #eee;
+    min-height: 700px;
+    overflow-y: auto;
 }
 
 a {

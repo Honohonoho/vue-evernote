@@ -8,33 +8,34 @@
 </template>
 
 <script>
-import User from '@/servers/user'
-import Bus from '@/utils/bus'
+import {mapGetters, mapActions} from 'vuex'
 
 export default {
     data() {
         return {
-            username: "未登录"
-        };
+        }
     },
     created() {
-        User.getUserInfo().then(res => {
-            console.log(res)
-            if (res.isLogin) {
-                this.username = res.data.username
-            }
-            else {
-                this.$router.push({path: '/login'})
-            }
+        this.setUser().then(res => {
         })
-        Bus.$on('catchUserInfo', data => {
-            this.username = data.username
+        .catch(res => {
+            this.$message({
+                message: '请先登录',
+                type: 'error'
+            })
+            this.$router.push({path: '/login'})
         })
     },
     computed: {
-        slug() {
-            return this.username.charAt(0)
-        }
+        ...mapGetters([
+            'username',
+            'slug'
+        ])
+    },
+    methods: {
+        ...mapActions({
+            setUser: 'checkLogin'
+        })
     }
 };
 </script>
