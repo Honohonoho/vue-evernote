@@ -18,6 +18,7 @@
 ![笔记详情页](https://upload-images.jianshu.io/upload_images/5548587-a954a13df02b45e8.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
 #### 技术栈：Vue全家桶、Webpack4.x、Element-UI、Axios
+[在线预览](https://honohonoho.github.io/vue-evernote/dist/index.html)
 
 ```
 使用方法：
