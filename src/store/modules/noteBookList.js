@@ -73,7 +73,6 @@ const actions = {
         })
     },
     deleteNoteBook({ commit }, payload) {
-        console.log(payload)
         NoteBooksListService.delete({id: payload.id}).then(res => {
             commit('deleteNoteBook', {id: payload.id})
             Message({

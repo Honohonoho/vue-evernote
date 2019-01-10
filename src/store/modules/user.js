@@ -18,19 +18,16 @@ const mutations = {
 const actions = {
     login({commit}, { username, password }) {
         return User.login({ username, password }).then(res => {
-            console.log(res)
             commit('setUser', {user: res.data})
         })
     },
     register({commit}, { username, password }) {
         return User.register({ username, password }).then(res => {
-            console.log(res)
             commit('setUser', {user: res.data})
         })
     },
     logout({commit}) {
         return User.logout().then(res => {
-            console.log(res)
         })
     },
     checkLogin({commit}) {
