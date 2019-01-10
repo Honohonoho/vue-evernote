@@ -34,6 +34,6 @@ npm run dev 或 npm start
 # build for production with minification
 npm run build
 
-最后，star本repo :)  →_→
+最后，如果喜欢，请star本repo :)  →_→
 ```
 

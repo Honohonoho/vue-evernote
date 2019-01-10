@@ -87,7 +87,6 @@ export default {
                     this.$router.push({path: '/notebookslist'})
                 })
                 .catch(res => {
-                    console.log(res)
                     this.register.isError = true
                     this.register.notice = res.msg
                 })
@@ -111,7 +110,6 @@ export default {
                     this.$router.push({path: '/notebookslist'})
                 })
                 .catch(() => {
-                    console.log(1)
                     this.login.isError = true
                     this.login.notice = res.msg
                 })

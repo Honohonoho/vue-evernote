@@ -440,7 +440,6 @@ export default {
                     padding: 10px;
                     border-radius: 10px;
                     code {
-                        color: 	#6495ED;
                         line-height: 1.5;
                         font-family: "Helvetica Neue",Helvetica,"PingFang SC","Hiragino Sans GB","Microsoft YaHei","微软雅黑",Arial,sans-serif;
                     }
